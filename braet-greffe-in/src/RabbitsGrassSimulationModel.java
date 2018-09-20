@@ -190,7 +190,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		this.birthThreshold = birthTreshold;
 	}
 
-	public double getGrassGrowthRate() {
+	public int getGrassGrowthRate() {
 		return grassGrowthRate;
 	}
 
