@@ -1,6 +1,9 @@
+import java.util.ArrayList;
+
 import uchicago.src.sim.engine.Schedule;
 import uchicago.src.sim.engine.SimInit;
 import uchicago.src.sim.engine.SimModelImpl;
+import uchicago.src.sim.gui.DisplaySurface;
 
 /**
  * Class that implements the simulation model for the rabbits grass
@@ -13,23 +16,51 @@ import uchicago.src.sim.engine.SimModelImpl;
 
 
 public class RabbitsGrassSimulationModel extends SimModelImpl {		
-	private int gridSize = 20; // TODO: write in report we chose square because rectangles are not interesting 
-	private int initNumberRabbits = 20; // TODO: should be smaller than gridSize^2
-	private int birthTreshold = 10;
-	private double grassGrowthRate = 0.005;
+	private static final int GRIDSIZE = 20;
+	private static final int NUMRABBITS = 20;
+	private static final int BIRTHTHRESHOLD = 10;
+	private static final double GRASSGROWRATE = 0.005;
+	private static final int GRASSENERGY = 5;
+	private static final int MOVINGCOST = 1;
 	
-	private int grassEnergy = 5; // TODO: decide if they are variables or not, constants atm
-	private int movingCost = 1;
+	
+	private int gridSize = GRIDSIZE; // TODO: write in report we chose square because rectangles are not interesting 
+	private int initNumberRabbits = NUMRABBITS; // TODO: should be smaller than gridSize^2
+	private int birthTreshold = BIRTHTHRESHOLD;
+	private double grassGrowthRate = GRASSGROWRATE;
+	
+	private int grassEnergy = GRASSENERGY; // TODO: decide if they are variables or not, constants atm
+	private int movingCost = MOVINGCOST;
 	
 	private Schedule schedule;
+	
 	private RabbitsGrassSimulationSpace rgsSpace;
 	
+	private ArrayList<RabbitsGrassSimulationAgent> rabbitList;
+
+	private DisplaySurface displaySurf;
 	
-	public static void main(String[] args) {
-	    SimInit init = new SimInit();
-	    RabbitsGrassSimulationModel model = new RabbitsGrassSimulationModel();
-	    init.loadModel(model, "", false);
+	public String getName() {
+		return "Rabbits and Grass";
 	}
+	
+	public void setup() {
+		System.out.println("Running setup");
+		rgsSpace = null;
+		rabbitList = new ArrayList<RabbitsGrassSimulationAgent>();
+		schedule = new Schedule(1);
+		
+		if (displaySurf != null) {
+			displaySurf.dispose();
+		}
+		
+		displaySurf = null;
+		
+		displaySurf = new DisplaySurface(this, "Carry Drop Model Window 1");
+		
+		registerDisplaySurface("Carry Drop Model Windows 1", displaySurf);
+	}
+	
 
 	public void begin() {
 		buildModel();
@@ -55,17 +86,10 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		return initParams;
 	}
 
-	public String getName() {
-		return "Rabbits and Grass";
-	}
+	
 
 	public Schedule getSchedule() {
 		return schedule;
-	}
-
-	public void setup() {
-		System.out.println("Running Setup");
-		rgsSpace = null;
 	}
 
 	public int getGridSize() {
@@ -98,5 +122,11 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
 	public void setGrassGrowthRate(double grassGrowthRate) {
 		this.grassGrowthRate = grassGrowthRate;
+	}
+	
+	public static void main(String[] args) {
+	    SimInit init = new SimInit();
+	    RabbitsGrassSimulationModel model = new RabbitsGrassSimulationModel();
+	    init.loadModel(model, "", false);
 	}
 }

@@ -40,4 +40,14 @@ public class RabbitsGrassSimulationSpace {
 		}
 	}
 
+	public Object2DGrid getCurrentAgentSpace() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public boolean moveRabbitAt(int x, int y, int newX, int newY) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }
