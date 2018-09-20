@@ -14,7 +14,7 @@ import uchicago.src.sim.engine.SimModelImpl;
 
 public class RabbitsGrassSimulationModel extends SimModelImpl {		
 	private int gridSize = 20; // TODO: write in report we chose square because rectangles are not interesting 
-	private int initNumberRabbits = 20;
+	private int initNumberRabbits = 20; // TODO: should be smaller than gridSize^2
 	private int birthTreshold = 10;
 	private double grassGrowthRate = 0.005;
 	
