@@ -13,30 +13,35 @@ public class RabbitsGrassSimulationSpace {
 	
 	public RabbitsGrassSimulationSpace(int gridSize, int initNumberRabbits) {
 		space = new Object2DGrid(gridSize, gridSize);
+		
+		// if there is more than a rabbit in 1 out of 2 locations, we place randomly the
+		// empty locations rather than the rabbits for speed
+		Integer defaultValue, alternativeValue;
+		int numberAlternatives;
+		
+		if (initNumberRabbits < gridSize*gridSize/2) {
+			defaultValue = new Integer(0);
+			alternativeValue = new Integer(1);
+			numberAlternatives = initNumberRabbits;
+		} else {
+			defaultValue = new Integer(1);
+			alternativeValue = new Integer(0);
+			numberAlternatives = gridSize*gridSize - initNumberRabbits;
+		}
+		
 		for(int i = 0; i < gridSize; i++) {
 			for(int j = 0; j < gridSize; j++) {
-				space.putObjectAt(i, j, new Integer(0));
+				space.putObjectAt(i, j, defaultValue);
 			}
 		}
-		placeRabbits(gridSize, initNumberRabbits);
-	}
-
-	/*
-	 * the locations of the rabbits are given by the initNumberRabbits first elements of a permutation
-	 * of integers from 0 to gridSize^2
-	 */
-	private void placeRabbits(int gridSize, int initNumberRabbits) {
-		int listSize = gridSize * gridSize;
-		ArrayList<Integer> list = new ArrayList<Integer>(listSize);
-		for(int i = 0; i < listSize; i++) {
-			list.add(i);
-		}
-		Collections.shuffle(list);
 		
-		for(int i = 0; i < initNumberRabbits; i++) {
-			int x = list.get(i) / gridSize;
-			int y = list.get(i) % gridSize;
-			space.putObjectAt(x, y, new Integer(1));
+		for(int i = 0; i < numberAlternatives;) {
+			int x = (int) (Math.random() * gridSize);
+			int y = (int) (Math.random() * gridSize);
+			if (((Integer) space.getObjectAt(x, y)).equals(defaultValue)) { // cannot be null
+				space.putObjectAt(x, y, alternativeValue);
+				i++;
+			}
 		}
 	}
 
