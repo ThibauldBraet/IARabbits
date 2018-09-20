@@ -131,23 +131,6 @@ public class RabbitsGrassSimulationSpace {
 		}
 	}
 	
-	/*
-	 * the locations of the rabbits are given by the initNumberRabbits first elements of a permutation
-	 * of integers from 0 to gridSize^2
-	 */
-	/*private void placeRabbits(int initNumberRabbits) {
-		int listSize = gridSize * gridSize;
-		ArrayList<Integer> list = new ArrayList<Integer>(listSize);
-		for(int i = 0; i < listSize; i++) {
-			list.add(i);
-		}
-		Collections.shuffle(list);
-		
-		for(int i = 0; i < initNumberRabbits; i++) {
-			int x = list.get(i) / gridSize;
-			int y = list.get(i) % gridSize;
-			space.putObjectAt(x, y, new Integer(1));
-		}
-	}*/
+
 	
 }
