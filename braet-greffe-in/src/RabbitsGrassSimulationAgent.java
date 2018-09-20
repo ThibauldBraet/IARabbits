@@ -121,6 +121,8 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 		}			
 		energy -= MOVINGCOST; //each step costs energy
 		
+		setDirection(); //choose new randomDirection for next step
+		
 		
 		
 		
