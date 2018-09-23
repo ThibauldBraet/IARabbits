@@ -6,76 +6,52 @@ import uchicago.src.sim.space.Object2DGrid;
 
 /**
  * Class that implements the simulation agent for the rabbits grass simulation.
-
- * @author
  */
 
 
 
 public class RabbitsGrassSimulationAgent implements Drawable {
 	private static int MOVINGCOST = 1;
-	private static int REPRODUCTIONCOST = 10;
 	
-	private int energy; //energy left
-	private int x; //current x-coordinate
-	private int y; //current y-coordinate
-	private char direction; //direction to go next
+	private int energy; // energy left
+	private int x; // current x-coordinate
+	private int y; // current y-coordinate
 	private static int IDNumber = 0;
 	private int ID;
 	private RabbitsGrassSimulationSpace rgsSpace;
 	
 	
-	//Create Rabbit with default energy and random direction
+	// Create Rabbit with given energy and random direction
 	public RabbitsGrassSimulationAgent(int initEnergy) {	
 		energy = initEnergy;
-		x=-1;
-		y=-1;
-		setDirection();
+		x = -1;
+		y = -1;
 		IDNumber++;
 		ID = IDNumber;
 	}
-	
-	//Set the direction at random
-	private void setDirection() {
-		int rand = (int) Math.floor(Math.random() * 4);
-		switch(rand) {
-			case 0:
-				direction = 'N';
-				break;
-			case 1:
-				direction = 'E';
-				break;
-			case 2:
-				direction = 'S';
-				break;
-			case 3:
-				direction = 'W';
-				break;
-		}
 		
-	}
-		
-	//Change coordinates
+	// Change coordinates
 	public void setXY(int newX, int newY) {
 		x = newX;
 		y = newY;
 	}
 	
-	//Set the grass-space
+	// Set the grass-space
 	public void setRabbitsGrassSimulationSpace(RabbitsGrassSimulationSpace rgss) {
 		rgsSpace = rgss;
 	}
 	
-	//Get ID
+	// Get ID
 	public String getID() {
 		return "R-" + ID;
 	}
 	
-	//Get energy left
+	// Get energy left
 	public int getEnergy() {
 		return energy;
 	}
 	
+	// prints a resume of the rabbit's characteristics
 	public void report() {
 		System.out.println(getID() + " at " + x + ", " + y + " has " + getEnergy() + "energy");
 	}
@@ -89,25 +65,25 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	}
 
 	public void draw(SimGraphics G) {
-		G.drawFastRoundRect(Color.WHITE);		
+		G.drawFastOval(Color.WHITE);		
 	}
 	
 	
-	//Try to move and eat grass on next position if there is still grass present there
+	// Try to move and eat grass on next position if there is grass there
 	public void step() {
 		int newX = x;
 		int newY = y;
-		switch(direction) {
-		case 'N':
+		switch((int) (Math.random() * 4)) {
+		case 0: // North
 			newY--;
 			break;
-		case 'E':
+		case 1: // East
 			newX++;
 			break;
-		case 'S':
+		case 2: // South
 			newY++;
 			break;
-		case 'W':
+		case 3: // West
 			newX--;
 			break;
 		}
@@ -116,25 +92,22 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 		newX = (newX + grid.getSizeX()) % grid.getSizeX();
 		newY = (newY + grid.getSizeY()) % grid.getSizeY();
 		
-		if(tryMove(newX, newY)) {
+		if (tryMove(newX, newY)) {
 			energy += rgsSpace.eatGrassAt(newX, newY);
-		}			
-		energy -= MOVINGCOST; //each step costs energy
-		
-		setDirection(); //choose new randomDirection for next step
-		
-		
-		
-		
+		} else {
+			energy += rgsSpace.eatGrassAt(x, y);
+		}
+		energy -= MOVINGCOST; // each step costs energy
 	}
 	
 	private boolean tryMove(int newX, int newY) {
 		return rgsSpace.moveRabbitAt(x, y, newX, newY);
 	}
 
-	
-	public void reproduce() {
-		energy -= REPRODUCTIONCOST;
+	// divides the rabbit's energy by 2, return the amount of energy "given" to the child rabbit
+	public int reproduce() {
+		energy /= 2;
+		return energy;
 	}
 
 

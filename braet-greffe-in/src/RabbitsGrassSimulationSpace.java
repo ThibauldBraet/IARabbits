@@ -1,11 +1,9 @@
 import java.util.ArrayList;
-import java.util.Collections;
-
 import uchicago.src.sim.space.Object2DGrid;
+
 
 /**
  * Class that implements the simulation space of the rabbits grass simulation.
- * @author 
  */
 
 public class RabbitsGrassSimulationSpace {
@@ -14,12 +12,16 @@ public class RabbitsGrassSimulationSpace {
 	
 	private Object2DGrid grassSpace;
 	private Object2DGrid rabbitSpace;
+	private int numberOfRabbits; // used to determine strategy to add a rabbit in a free spot
+	private final int numberOfCells;
 	
-	//Create both spaces
-	//Init all cells with grass value 0
+	// Create both spaces
+	// Initialize all cells with grass value 0
 	public RabbitsGrassSimulationSpace(int xSize, int ySize) {
 		grassSpace = new Object2DGrid(xSize, ySize);
 		rabbitSpace = new Object2DGrid(xSize, ySize);
+		numberOfRabbits = 0;
+		numberOfCells = xSize * ySize;
 		
 		for(int i = 0; i < xSize; i++) {
 			for(int j = 0; j < ySize; j++) {
@@ -28,18 +30,17 @@ public class RabbitsGrassSimulationSpace {
 		}
 	}
 	
-	//Add grass to a certain cell (value 1)
+	// Add grass to a certain cell (value 1)
 	public void addGrass(int x, int y) {
 		grassSpace.putObjectAt(x, y, new Integer(1));
 	}
 	
-	//Check if there is grass on this position
-	public boolean getGrass(int x, int y) {
-		if (((Integer) grassSpace.getObjectAt(x, y)).intValue() > 0) return true;
-		return false;
+	// Check if there is grass on this position
+	public boolean isCellOccupiedByGrass(int x, int y) {
+		return ((Integer) grassSpace.getObjectAt(x, y)).intValue() > 0;
 	}
 
-	//Get the rabbit at this position
+	// Get the rabbit at this position
 	public RabbitsGrassSimulationAgent getRabbitAt(int x, int y) {
 		RabbitsGrassSimulationAgent retVal = null;
 		if(rabbitSpace.getObjectAt(x, y) != null) {
@@ -56,53 +57,78 @@ public class RabbitsGrassSimulationSpace {
 		return rabbitSpace;
 	}
 	
-	//Check if there is a rabbit at this position
-	public boolean isCellOccupied(int x, int y) {
+	// Check if there is a rabbit at this position
+	public boolean isCellOccupiedByRabbit(int x, int y) {
 		boolean retVal = false;
 		if (rabbitSpace.getObjectAt(x, y) != null)
 			retVal = true;
 		return retVal;
 	}
 	
-	//Add rabbit to rabbitSpace by looking for open spot
-	//We look 10*x*y times for an open spot
-	public boolean addRabbit(RabbitsGrassSimulationAgent rabbit) {
-		boolean retVal = false;
-		int count = 0;
-		int countLimit = 10 * rabbitSpace.getSizeX() * rabbitSpace.getSizeY(); //10 is random chosen value. We just need to try enough times
-		
-		while((retVal == false) && (count < countLimit)) {
-			int x = (int) (Math.random() * (rabbitSpace.getSizeX()));
-			int y = (int) (Math.random() * (rabbitSpace.getSizeY()));
-			if (isCellOccupied(x, y) == false) {
-				rabbitSpace.putObjectAt(x, y, rabbit);
-				rabbit.setXY(x, y);
-				rabbit.setRabbitsGrassSimulationSpace(this);
-				retVal = true;
-			}
-			count++;
+	// Add rabbit to rabbitSpace by looking for open spot
+	public boolean addRabbit(RabbitsGrassSimulationAgent rabbit) {	
+		if (numberOfRabbits >= numberOfCells) {
+			return false;
 		}
-		return retVal;
+		
+		if (numberOfRabbits > 0.9 * numberOfCells) { /* 0.9 is arbitrary and represents a tradeoff between the
+		 time that is needed to find randomly an empty cell and the time needed to identify all of the empty cells
+		 in practice, it is unusual we will have 90% of rabbits but at least that case will be handled correctly */
+			class IntPair {
+				public final int x;
+				public final int y;
+				IntPair(int x, int y) {this.x = x; this.y = y;}
+			}
+			ArrayList<IntPair> freeSpots = new ArrayList<IntPair>();
+			for (int i = 0; i < rabbitSpace.getSizeX(); i++) {
+				for (int j = 0; j < rabbitSpace.getSizeY(); j++) {
+					if (!isCellOccupiedByRabbit(i, j)) {
+						freeSpots.add(new IntPair(i, j));
+					}
+				}
+			}
+			IntPair spot = freeSpots.get((int) Math.random() * freeSpots.size());
+			rabbitSpace.putObjectAt(spot.x, spot.y, rabbit);
+			rabbit.setXY(spot.x, spot.y);
+			rabbit.setRabbitsGrassSimulationSpace(this);			
+		} else {
+			boolean found = false;
+			while (!found) {
+				int x = (int) (Math.random() * (rabbitSpace.getSizeX()));
+				int y = (int) (Math.random() * (rabbitSpace.getSizeY()));
+				if (!isCellOccupiedByRabbit(x, y)) {
+					rabbitSpace.putObjectAt(x, y, rabbit);
+					rabbit.setXY(x, y);
+					rabbit.setRabbitsGrassSimulationSpace(this);
+					found = true;
+				}
+			}
+		}
+		numberOfRabbits++;
+		return true;
 	}
 	
-	//Delete the rabbit at this position
-	public void removeRabbitAt(int x, int y) {
-		rabbitSpace.putObjectAt(x, y, null);		
+	// Delete the rabbit at this position
+	public void removeRabbitAt(int x, int y, boolean decrementNumberOfRabbits) {
+		rabbitSpace.putObjectAt(x, y, null);
+		if (decrementNumberOfRabbits) {
+			numberOfRabbits--;
+		}
 	}
 	
-	//Set the grass value on 0 for this position (so eat the grass)
+	// Set the grass value on 0 for this position (so eat the grass)
 	public int eatGrassAt(int x, int y) {
-		int grass = getGrass(x, y) ? GRASSENERGY : 0;
+		int energy = isCellOccupiedByGrass(x, y) ? GRASSENERGY : 0;
 		grassSpace.putObjectAt(x, y, new Integer(0));
-		return grass;
+		return energy;
 	}
 	
-	//Check if new cell is occupied and if not move the rabbit
+	// Check if new cell is occupied and if not move the rabbit
 	public boolean moveRabbitAt(int x, int y, int newX, int newY) {
 		boolean retVal = false;	
-		if(!isCellOccupied(newX, newY)) {
-			RabbitsGrassSimulationAgent rgsa = (RabbitsGrassSimulationAgent)rabbitSpace.getObjectAt(x, y);
-			removeRabbitAt(x,y);
+		if(!isCellOccupiedByRabbit(newX, newY)) {
+			RabbitsGrassSimulationAgent rgsa = (RabbitsGrassSimulationAgent) rabbitSpace.getObjectAt(x, y);
+			removeRabbitAt(x,y, false);
 			rgsa.setXY(newX, newY);
 			rabbitSpace.putObjectAt(newX, newY, rgsa);
 			retVal = true;
@@ -111,26 +137,21 @@ public class RabbitsGrassSimulationSpace {
 	}
 	
 	
-	//Add certain amount of grass
-	public void addGrass(int amount) {
-		for (int i=0; i<amount; i++) {
-			boolean grown = false;
-			int count = 0;
-			int countLimit = grassSpace.getSizeX() * grassSpace.getSizeY(); 
-			
-			//Look for a limit amount of time for a space to grow grass
-			while((grown == false) && (count < countLimit)) {
-				int x = (int) (Math.random() * (grassSpace.getSizeX()));
-				int y = (int) (Math.random() * (grassSpace.getSizeY()));
-				if (!getGrass(x, y)) {
-					addGrass(x,y);
-					grown = true;
+	// Add certain amount of grass
+	public void addGrass(float rate) {
+		for (int i = 0; i < rabbitSpace.getSizeX(); i++) {
+			for (int j = 0; j < rabbitSpace.getSizeY(); j++) {
+				if (!isCellOccupiedByGrass(i, j)) {
+					if (rate > Math.random()) {
+						addGrass(i, j);
+					}
 				}
-				count++;
 			}
 		}
 	}
 	
-
-	
+	// prints the number of rabbits
+	public void printNumberOfRabbits() {
+		System.out.println("There are currently " + Integer.toString(numberOfRabbits) + " rabbits.");
+	}
 }

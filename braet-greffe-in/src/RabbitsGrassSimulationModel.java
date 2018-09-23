@@ -13,11 +13,10 @@ import uchicago.src.sim.util.SimUtilities;
 
 /**
  * Class that implements the simulation model for the rabbits grass
- * simulation.  This is the first class which needs to be setup in
+ * simulation. This is the first class which needs to be setup in
  * order to run Repast simulation. It manages the entire RePast
  * environment and the simulation.
  *
- * @author 
  */
 
 
@@ -25,15 +24,14 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	private static final int GRIDSIZE = 20;
 	private static final int NUMRABBITS = 20;
 	private static final int BIRTHTHRESHOLD = 10;
-	private static final int GRASSGROWRATE = 60;
+	private static final float GRASSGROWRATE = 0.3f;
 	private static final int STARTENERGY = 10;
 	
 	
 	private int gridSize = GRIDSIZE; // TODO: write in report we chose square because rectangles are not interesting 
 	private int initNumberRabbits = NUMRABBITS; // TODO: should be smaller than gridSize^2
 	private int birthThreshold = BIRTHTHRESHOLD;
-	private int grassGrowthRate = GRASSGROWRATE;
-	private int startEnergy = STARTENERGY;
+	private float grassGrowthRate = GRASSGROWRATE;
 	
 	
 	private Schedule schedule;
@@ -79,12 +77,12 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		rgsSpace = new RabbitsGrassSimulationSpace(gridSize, gridSize);		
 		
 		for (int i = 0; i < initNumberRabbits; i++) {
-			addNewRabbit();
+			addNewRabbit(STARTENERGY);
 		}
 		
 		for (int i = 0; i < rabbitList.size(); i++) {
 			RabbitsGrassSimulationAgent rgsa = (RabbitsGrassSimulationAgent) rabbitList.get(i);
-			rgsa.report();
+			rgsa.report(); // TODO: remove?
 		}
 	}
 	
@@ -94,12 +92,12 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		class RabbitGrassSimulationStep extends BasicAction {
 			public void execute() {
 				SimUtilities.shuffle(rabbitList);
-				for (int i = 0; i<rabbitList.size(); i++) {
+				for (int i = 0; i < rabbitList.size(); i++) {
 					RabbitsGrassSimulationAgent rgsa = (RabbitsGrassSimulationAgent) rabbitList.get(i);
 					rgsa.step();
-					if (rgsa.getEnergy()> birthThreshold) {
-						rgsa.reproduce();
-						addNewRabbit();
+					if (rgsa.getEnergy() > birthThreshold) {
+						int energy = rgsa.reproduce();
+						addNewRabbit(energy);
 					}
 				}
 				
@@ -107,6 +105,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 				
 				reapDeadRabbits();
 				
+				rgsSpace.printNumberOfRabbits();
+				System.out.println(rabbitList.size());
 				displaySurf.updateDisplay();
 			}
 		}
@@ -114,29 +114,27 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		schedule.scheduleActionBeginning(0, new RabbitGrassSimulationStep());
 	}
 	
-	private void addNewRabbit() {
+	private void addNewRabbit(int startEnergy) {
 		RabbitsGrassSimulationAgent rabbit = new RabbitsGrassSimulationAgent(startEnergy);
 		boolean placed = rgsSpace.addRabbit(rabbit);
 		if (placed) {
-			rabbitList.add(rabbit); //If no place left, rabbit won't be placed in grid
+			rabbitList.add(rabbit); // If no place left, rabbit won't be placed on the grid
 		}
 	}
 	
 	private int reapDeadRabbits(){
 	    int count = 0;
-	    for(int i = (rabbitList.size() - 1); i >= 0 ; i--){
-	     RabbitsGrassSimulationAgent rgsa = (RabbitsGrassSimulationAgent)rabbitList.get(i);
-	      if(rgsa.getEnergy() < 1){
-	        rgsSpace.removeRabbitAt(rgsa.getX(), rgsa.getY());
-	        rabbitList.remove(i);
-	        count++;
-	      }
+	    for (int i = (rabbitList.size() - 1); i >= 0 ; i--) {
+	    	RabbitsGrassSimulationAgent rgsa = (RabbitsGrassSimulationAgent)rabbitList.get(i);
+	    	if (rgsa.getEnergy() < 1) {
+	    		rgsSpace.removeRabbitAt(rgsa.getX(), rgsa.getY(), true);
+	    		rabbitList.remove(i);
+	    		count++;
+	    	}
 	    }
+	    System.out.println(Integer.toString(count) + " dead rabbits");
 	    return count;
-	  }
-	
-	
-	
+	}
 	
 	public void buildDisplay() {
 		System.out.println("Running BuildDisplay");
@@ -159,8 +157,6 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		String[] initParams = {"GridSize", "InitNumberRabbits", "BirthTreshold", "GrassGrowthRate"};
 		return initParams;
 	}
-
-	
 
 	public Schedule getSchedule() {
 		return schedule;
@@ -190,11 +186,11 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		this.birthThreshold = birthTreshold;
 	}
 
-	public int getGrassGrowthRate() {
+	public float getGrassGrowthRate() {
 		return grassGrowthRate;
 	}
 
-	public void setGrassGrowthRate(int grassGrowthRate) {
+	public void setGrassGrowthRate(float grassGrowthRate) {
 		this.grassGrowthRate = grassGrowthRate;
 	}
 	
