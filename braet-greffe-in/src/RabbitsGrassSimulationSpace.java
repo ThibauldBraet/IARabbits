@@ -13,6 +13,7 @@ public class RabbitsGrassSimulationSpace {
 	private Object2DGrid grassSpace;
 	private Object2DGrid rabbitSpace;
 	private int numberOfRabbits; // used to determine strategy to add a rabbit in a free spot
+	private int numberOfGrass;
 	private final int numberOfCells;
 	
 	// Create both spaces
@@ -21,6 +22,7 @@ public class RabbitsGrassSimulationSpace {
 		grassSpace = new Object2DGrid(xSize, ySize);
 		rabbitSpace = new Object2DGrid(xSize, ySize);
 		numberOfRabbits = 0;
+		numberOfGrass = 0;
 		numberOfCells = xSize * ySize;
 		
 		for(int i = 0; i < xSize; i++) {
@@ -28,11 +30,6 @@ public class RabbitsGrassSimulationSpace {
 				grassSpace.putObjectAt(i, j, new Integer(0));
 			}
 		}
-	}
-	
-	// Add grass to a certain cell (value 1)
-	public void addGrass(int x, int y) {
-		grassSpace.putObjectAt(x, y, new Integer(1));
 	}
 	
 	// Check if there is grass on this position
@@ -118,9 +115,12 @@ public class RabbitsGrassSimulationSpace {
 	
 	// Set the grass value on 0 for this position (so eat the grass)
 	public int eatGrassAt(int x, int y) {
-		int energy = isCellOccupiedByGrass(x, y) ? GRASSENERGY : 0;
-		grassSpace.putObjectAt(x, y, new Integer(0));
-		return energy;
+		if (isCellOccupiedByGrass(x, y)) {
+			grassSpace.putObjectAt(x, y, new Integer(0));
+			numberOfGrass--;
+			return GRASSENERGY;
+		}
+		return 0;
 	}
 	
 	// Check if new cell is occupied and if not move the rabbit
@@ -143,7 +143,8 @@ public class RabbitsGrassSimulationSpace {
 			for (int j = 0; j < rabbitSpace.getSizeY(); j++) {
 				if (!isCellOccupiedByGrass(i, j)) {
 					if (rate > Math.random()) {
-						addGrass(i, j);
+						grassSpace.putObjectAt(i, j, new Integer(1));
+						numberOfGrass++;
 					}
 				}
 			}
@@ -153,5 +154,13 @@ public class RabbitsGrassSimulationSpace {
 	// prints the number of rabbits
 	public void printNumberOfRabbits() {
 		System.out.println("There are currently " + Integer.toString(numberOfRabbits) + " rabbits.");
+	}
+	
+	public int getNumberOfRabbits() {
+		return numberOfRabbits;
+	}
+	
+	public int getNumberOfGrass() {
+		return numberOfGrass;
 	}
 }

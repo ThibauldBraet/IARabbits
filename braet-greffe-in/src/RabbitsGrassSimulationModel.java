@@ -1,6 +1,10 @@
 import java.util.ArrayList;
 
 import java.awt.Color;
+
+import uchicago.src.sim.analysis.DataSource;
+import uchicago.src.sim.analysis.OpenSequenceGraph;
+import uchicago.src.sim.analysis.Sequence;
 import uchicago.src.sim.engine.BasicAction;
 import uchicago.src.sim.engine.Schedule;
 import uchicago.src.sim.engine.SimInit;
@@ -29,24 +33,43 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	
 	
 	private int gridSize = GRIDSIZE; // TODO: write in report we chose square because rectangles are not interesting 
-	private int initNumberRabbits = NUMRABBITS; // TODO: should be smaller than gridSize^2
+	private int initNumberRabbits = NUMRABBITS;
 	private int birthThreshold = BIRTHTHRESHOLD;
 	private float grassGrowthRate = GRASSGROWRATE;
 	
 	
 	private Schedule schedule;
-	
 	private RabbitsGrassSimulationSpace rgsSpace;
-	
 	private ArrayList<RabbitsGrassSimulationAgent> rabbitList;
-
 	private DisplaySurface displaySurf;
+	private OpenSequenceGraph graph;
+	
+	class amountOfRabbits implements DataSource, Sequence {
+		public Object execute() {
+			return new Double(getSValue());
+		}
+
+		public double getSValue() {
+			return (double) rgsSpace.getNumberOfRabbits();
+		}
+	}
+	
+	class amountOfGrass implements DataSource, Sequence {
+		public Object execute() {
+			return new Double(getSValue());
+		}
+
+		public double getSValue() {
+			return (double) rgsSpace.getNumberOfGrass();
+		}
+	}
 	
 	public String getName() {
 		return "Rabbits and Grass";
 	}
 	
 	public void setup() {
+		System.out.close();  // otherwise Repast will bug, see https://sourceforge.net/p/repast/mailman/message/20323030/
 		System.out.println("Running setup");
 		rgsSpace = null;
 		rabbitList = new ArrayList<RabbitsGrassSimulationAgent>();
@@ -55,12 +78,18 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		if (displaySurf != null) {
 			displaySurf.dispose();
 		}
-		
 		displaySurf = null;
 		
+		if (graph != null) {
+			graph.dispose();
+		}
+		graph = null;
+		
 		displaySurf = new DisplaySurface(this, "Rabbits Grass Simulation Model Window 1");
+		graph = new OpenSequenceGraph("Amount of rabbits and grass", this);
 		
 		registerDisplaySurface("Rabbits Grass Simulation Model Windows 1", displaySurf);
+		this.registerMediaProducer("Plot", graph);
 	}
 	
 
@@ -70,6 +99,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	    buildDisplay();
 	    
 	    displaySurf.display();
+	    graph.display();
 	}
 
 	public void buildModel() {
@@ -82,12 +112,13 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		
 		for (int i = 0; i < rabbitList.size(); i++) {
 			RabbitsGrassSimulationAgent rgsa = (RabbitsGrassSimulationAgent) rabbitList.get(i);
-			rgsa.report(); // TODO: remove?
+			rgsa.report();
 		}
 	}
 	
 	public void buildSchedule() {
 		System.out.println("Running BuildSchedule");
+		ArrayList<BasicAction> list = new ArrayList<BasicAction>();
 		
 		class RabbitGrassSimulationStep extends BasicAction {
 			public void execute() {
@@ -105,13 +136,19 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 				
 				reapDeadRabbits();
 				
-				rgsSpace.printNumberOfRabbits();
-				System.out.println(rabbitList.size());
 				displaySurf.updateDisplay();
 			}
 		}
+		list.add(new RabbitGrassSimulationStep());
 		
-		schedule.scheduleActionBeginning(0, new RabbitGrassSimulationStep());
+		class UpdateRabbitsGraph extends BasicAction {
+			public void execute(){
+				graph.step();
+			}
+		}
+		list.add(new UpdateRabbitsGraph());
+		
+		schedule.scheduleActionBeginning(0, list, BasicAction.class, "execute");
 	}
 	
 	private void addNewRabbit(int startEnergy) {
@@ -132,7 +169,6 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	    		count++;
 	    	}
 	    }
-	    System.out.println(Integer.toString(count) + " dead rabbits");
 	    return count;
 	}
 	
@@ -151,6 +187,9 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		
 		displaySurf.addDisplayableProbeable(displayGrass, "Grass");
 		displaySurf.addDisplayableProbeable(displayRabbits, "Agents");
+		
+		graph.addSequence("Number of Rabbits", new amountOfRabbits());
+		graph.addSequence("Amount of Grass", new amountOfGrass());
 	}
 
 	public String[] getInitParam() {
@@ -167,7 +206,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	}
 
 	public void setGridSize(int gridSize) {
-		this.gridSize = gridSize;
+		this.gridSize = Math.max(gridSize, 1);
 	}
 
 	public int getInitNumberRabbits() {
@@ -175,7 +214,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	}
 
 	public void setInitNumberRabbits(int initNumberRabbits) {
-		this.initNumberRabbits = initNumberRabbits;
+		this.initNumberRabbits = Math.max(initNumberRabbits, 0);
 	}
 
 	public int getBirthTreshold() {
@@ -183,7 +222,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	}
 
 	public void setBirthTreshold(int birthTreshold) {
-		this.birthThreshold = birthTreshold;
+		this.birthThreshold = Math.max(birthTreshold, 0);
 	}
 
 	public float getGrassGrowthRate() {
@@ -191,7 +230,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	}
 
 	public void setGrassGrowthRate(float grassGrowthRate) {
-		this.grassGrowthRate = grassGrowthRate;
+		this.grassGrowthRate = Math.min(Math.max(grassGrowthRate, 0.0f), 1.0f);
 	}
 	
 	public static void main(String[] args) {
