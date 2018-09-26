@@ -142,7 +142,6 @@ public class RabbitsGrassSimulationSpace {
 	public void addGrass(int amount) {
 		int nbrFreeSpots = numberOfCells - numberOfGrass;
 		amount = Math.min(amount, nbrFreeSpots);
-		int count = 0;
 		if (nbrFreeSpots - amount < 0.05 * numberOfCells) { /* if the space is nearly full, we will be faster
 			by finding the free Spots and choosing directly amount of them, again, 0.05 is arbitrary */
 			ArrayList<IntPair> freeSpots = new ArrayList<IntPair>();
@@ -157,7 +156,6 @@ public class RabbitsGrassSimulationSpace {
 			for (int i = 0; i < amount; i++) {
 				grassSpace.putObjectAt(freeSpots.get(i).x, freeSpots.get(i).y, new Integer(1));
 				numberOfGrass++;
-				count++;
 			}
 		} else {
 			while (amount > 0) {
@@ -167,11 +165,9 @@ public class RabbitsGrassSimulationSpace {
 					grassSpace.putObjectAt(x, y, new Integer(1));
 					numberOfGrass++;
 					amount--;
-					count++;
 				}
 			}
 		}
-		System.out.println(Integer.toString(count));
 	}
 	
 	// prints the number of rabbits
