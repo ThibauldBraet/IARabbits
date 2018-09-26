@@ -2,7 +2,9 @@ import java.util.ArrayList;
 
 import java.awt.Color;
 
+import uchicago.src.sim.analysis.BinDataSource;
 import uchicago.src.sim.analysis.DataSource;
+import uchicago.src.sim.analysis.OpenHistogram;
 import uchicago.src.sim.analysis.OpenSequenceGraph;
 import uchicago.src.sim.analysis.Sequence;
 import uchicago.src.sim.engine.BasicAction;
@@ -32,7 +34,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	private static final int STARTENERGY = 10;
 	
 	
-	private int gridSize = GRIDSIZE; // TODO: write in report we chose square because rectangles are not interesting 
+	private int gridSize = GRIDSIZE;
 	private int initNumberRabbits = NUMRABBITS;
 	private int birthThreshold = BIRTHTHRESHOLD;
 	private float grassGrowthRate = GRASSGROWRATE;
@@ -42,7 +44,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	private RabbitsGrassSimulationSpace rgsSpace;
 	private ArrayList<RabbitsGrassSimulationAgent> rabbitList;
 	private DisplaySurface displaySurf;
-	private OpenSequenceGraph graph;
+	private OpenSequenceGraph populationsGraph;
+	private OpenHistogram energyHistogram;
 	
 	class amountOfRabbits implements DataSource, Sequence {
 		public Object execute() {
@@ -64,6 +67,13 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		}
 	}
 	
+	class rabbitEnergy implements BinDataSource {
+		public double getBinValue(Object o) {
+			RabbitsGrassSimulationAgent rgsa = (RabbitsGrassSimulationAgent) o;
+			return (double) rgsa.getEnergy();
+		}
+	}
+	
 	public String getName() {
 		return "Rabbits and Grass";
 	}
@@ -80,16 +90,22 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		}
 		displaySurf = null;
 		
-		if (graph != null) {
-			graph.dispose();
+		if (populationsGraph != null) {
+			populationsGraph.dispose();
 		}
-		graph = null;
+		populationsGraph = null;
+		
+		if (energyHistogram != null) {
+			energyHistogram.dispose();
+		}
+		energyHistogram = null;
 		
 		displaySurf = new DisplaySurface(this, "Rabbits Grass Simulation Model Window 1");
-		graph = new OpenSequenceGraph("Amount of rabbits and grass", this);
+		populationsGraph = new OpenSequenceGraph("Amount of rabbits and grass", this);
+		energyHistogram = new OpenHistogram("Rabbits Energy", 8, 0);
 		
 		registerDisplaySurface("Rabbits Grass Simulation Model Windows 1", displaySurf);
-		this.registerMediaProducer("Plot", graph);
+		this.registerMediaProducer("Plot", populationsGraph);
 	}
 	
 
@@ -99,7 +115,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	    buildDisplay();
 	    
 	    displaySurf.display();
-	    graph.display();
+	    populationsGraph.display();
+	    energyHistogram.display();
 	}
 
 	public void buildModel() {
@@ -141,12 +158,19 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		}
 		list.add(new RabbitGrassSimulationStep());
 		
-		class UpdateRabbitsGraph extends BasicAction {
+		class UpdatePopulationsGraph extends BasicAction {
 			public void execute(){
-				graph.step();
+				populationsGraph.step();
 			}
 		}
-		list.add(new UpdateRabbitsGraph());
+		list.add(new UpdatePopulationsGraph());
+		
+		class UpdateEnergyHistogram extends BasicAction {
+			public void execute(){
+				energyHistogram.step();
+			}
+		}
+		list.add(new UpdateEnergyHistogram());
 		
 		schedule.scheduleActionBeginning(0, list, BasicAction.class, "execute");
 	}
@@ -169,6 +193,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	    		count++;
 	    	}
 	    }
+	    System.out.println(Integer.toString(count) + " Rabbits died this turn.");
 	    return count;
 	}
 	
@@ -188,8 +213,9 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		displaySurf.addDisplayableProbeable(displayGrass, "Grass");
 		displaySurf.addDisplayableProbeable(displayRabbits, "Agents");
 		
-		graph.addSequence("Number of Rabbits", new amountOfRabbits());
-		graph.addSequence("Amount of Grass", new amountOfGrass());
+		populationsGraph.addSequence("Number of Rabbits", new amountOfRabbits());
+		populationsGraph.addSequence("Amount of Grass", new amountOfGrass());
+		energyHistogram.createHistogramItem("Rabbits energy", rabbitList, new rabbitEnergy());
 	}
 
 	public String[] getInitParam() {
