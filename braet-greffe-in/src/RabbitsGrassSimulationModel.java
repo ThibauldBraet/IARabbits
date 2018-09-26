@@ -30,14 +30,14 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	private static final int GRIDSIZE = 20;
 	private static final int NUMRABBITS = 20;
 	private static final int BIRTHTHRESHOLD = 10;
-	private static final float GRASSGROWRATE = 0.3f;
+	private static final int GRASSGROWRATE = 20;
 	private static final int STARTENERGY = 10;
 	
 	
 	private int gridSize = GRIDSIZE;
 	private int initNumberRabbits = NUMRABBITS;
 	private int birthThreshold = BIRTHTHRESHOLD;
-	private float grassGrowthRate = GRASSGROWRATE;
+	private int grassGrowthRate = GRASSGROWRATE;
 	
 	
 	private Schedule schedule;
@@ -251,12 +251,12 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		this.birthThreshold = Math.max(birthTreshold, 0);
 	}
 
-	public float getGrassGrowthRate() {
+	public int getGrassGrowthRate() {
 		return grassGrowthRate;
 	}
 
-	public void setGrassGrowthRate(float grassGrowthRate) {
-		this.grassGrowthRate = Math.min(Math.max(grassGrowthRate, 0.0f), 1.0f);
+	public void setGrassGrowthRate(int grassGrowthRate) {
+		this.grassGrowthRate = Math.max(grassGrowthRate, 0);
 	}
 	
 	public static void main(String[] args) {

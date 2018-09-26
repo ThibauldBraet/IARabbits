@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Collections;
+
 import uchicago.src.sim.space.Object2DGrid;
 
 
@@ -15,6 +17,12 @@ public class RabbitsGrassSimulationSpace {
 	private int numberOfRabbits; // used to determine strategy to add a rabbit in a free spot
 	private int numberOfGrass;
 	private final int numberOfCells;
+	
+	class IntPair {
+		public final int x;
+		public final int y;
+		IntPair(int x, int y) {this.x = x; this.y = y;}
+	}
 	
 	// Create both spaces
 	// Initialize all cells with grass value 0
@@ -68,14 +76,8 @@ public class RabbitsGrassSimulationSpace {
 			return false;
 		}
 		
-		if (numberOfRabbits > 0.9 * numberOfCells) { /* 0.9 is arbitrary and represents a tradeoff between the
-		 time that is needed to find randomly an empty cell and the time needed to identify all of the empty cells
-		 in practice, it is unusual we will have 90% of rabbits but at least that case will be handled correctly */
-			class IntPair {
-				public final int x;
-				public final int y;
-				IntPair(int x, int y) {this.x = x; this.y = y;}
-			}
+		if (numberOfRabbits > 0.95 * numberOfCells) { /* 0.95 is arbitrary and represents a tradeoff between the
+		 time that is needed to find randomly an empty cell and the time needed to identify all of the empty cells */
 			ArrayList<IntPair> freeSpots = new ArrayList<IntPair>();
 			for (int i = 0; i < rabbitSpace.getSizeX(); i++) {
 				for (int j = 0; j < rabbitSpace.getSizeY(); j++) {
@@ -136,19 +138,40 @@ public class RabbitsGrassSimulationSpace {
 		return retVal;
 	}
 	
-	
 	// Add certain amount of grass
-	public void addGrass(float rate) {
-		for (int i = 0; i < rabbitSpace.getSizeX(); i++) {
-			for (int j = 0; j < rabbitSpace.getSizeY(); j++) {
-				if (!isCellOccupiedByGrass(i, j)) {
-					if (rate > Math.random()) {
-						grassSpace.putObjectAt(i, j, new Integer(1));
-						numberOfGrass++;
+	public void addGrass(int amount) {
+		int nbrFreeSpots = numberOfCells - numberOfGrass;
+		amount = Math.min(amount, nbrFreeSpots);
+		int count = 0;
+		if (nbrFreeSpots - amount < 0.05 * numberOfCells) { /* if the space is nearly full, we will be faster
+			by finding the free Spots and choosing directly amount of them, again, 0.05 is arbitrary */
+			ArrayList<IntPair> freeSpots = new ArrayList<IntPair>();
+			for (int i = 0; i < grassSpace.getSizeX(); i++) {
+				for (int j = 0; j < grassSpace.getSizeY(); j++) {
+					if (!isCellOccupiedByGrass(i, j)) {
+						freeSpots.add(new IntPair(i, j));
 					}
 				}
 			}
+			Collections.shuffle(freeSpots);
+			for (int i = 0; i < amount; i++) {
+				grassSpace.putObjectAt(freeSpots.get(i).x, freeSpots.get(i).y, new Integer(1));
+				numberOfGrass++;
+				count++;
+			}
+		} else {
+			while (amount > 0) {
+				int x = (int) (Math.random() * (grassSpace.getSizeX()));
+				int y = (int) (Math.random() * (grassSpace.getSizeY()));
+				if (!isCellOccupiedByGrass(x, y)) {
+					grassSpace.putObjectAt(x, y, new Integer(1));
+					numberOfGrass++;
+					amount--;
+					count++;
+				}
+			}
 		}
+		System.out.println(Integer.toString(count));
 	}
 	
 	// prints the number of rabbits
