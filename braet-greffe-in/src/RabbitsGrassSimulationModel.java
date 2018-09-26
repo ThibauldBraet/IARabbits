@@ -219,7 +219,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	}
 
 	public String[] getInitParam() {
-		String[] initParams = {"GridSize", "InitNumberRabbits", "BirthTreshold", "GrassGrowthRate"};
+		String[] initParams = {"GridSize", "InitNumberRabbits", "BirthThreshold", "GrassGrowthRate"};
 		return initParams;
 	}
 
@@ -243,12 +243,12 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		this.initNumberRabbits = Math.max(initNumberRabbits, 0);
 	}
 
-	public int getBirthTreshold() {
+	public int getBirthThreshold() {
 		return birthThreshold;
 	}
 
-	public void setBirthTreshold(int birthTreshold) {
-		this.birthThreshold = Math.max(birthTreshold, 0);
+	public void setBirthThreshold(int birthThreshold) {
+		this.birthThreshold = Math.max(birthThreshold, 0);
 	}
 
 	public int getGrassGrowthRate() {
