@@ -2,9 +2,7 @@ import java.util.ArrayList;
 
 import java.awt.Color;
 
-import uchicago.src.sim.analysis.BinDataSource;
 import uchicago.src.sim.analysis.DataSource;
-import uchicago.src.sim.analysis.OpenHistogram;
 import uchicago.src.sim.analysis.OpenSequenceGraph;
 import uchicago.src.sim.analysis.Sequence;
 import uchicago.src.sim.engine.BasicAction;
@@ -45,7 +43,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	private ArrayList<RabbitsGrassSimulationAgent> rabbitList;
 	private DisplaySurface displaySurf;
 	private OpenSequenceGraph populationsGraph;
-	private OpenHistogram energyHistogram;
+	/* private OpenHistogram energyHistogram; This code was commented out because RePast Histograms crashes when
+	 there are no more rabbits we are aware this is bad practice but you can review the code we used to plot the histograms */
 	
 	class amountOfRabbits implements DataSource, Sequence {
 		public Object execute() {
@@ -67,12 +66,12 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		}
 	}
 	
-	class rabbitEnergy implements BinDataSource {
+	/*class rabbitEnergy implements BinDataSource {
 		public double getBinValue(Object o) {
 			RabbitsGrassSimulationAgent rgsa = (RabbitsGrassSimulationAgent) o;
 			return (double) rgsa.getEnergy();
 		}
-	}
+	}*/
 	
 	public String getName() {
 		return "Rabbits and Grass";
@@ -95,14 +94,14 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		}
 		populationsGraph = null;
 		
-		if (energyHistogram != null) {
+		/*if (energyHistogram != null) {
 			energyHistogram.dispose();
 		}
-		energyHistogram = null;
+		energyHistogram = null;*/
 		
 		displaySurf = new DisplaySurface(this, "Rabbits Grass Simulation Model Window 1");
 		populationsGraph = new OpenSequenceGraph("Amount of rabbits and grass", this);
-		energyHistogram = new OpenHistogram("Rabbits Energy", 8, 0);
+		//energyHistogram = new OpenHistogram("Rabbits Energy", 8, 0);
 		
 		registerDisplaySurface("Rabbits Grass Simulation Model Windows 1", displaySurf);
 		this.registerMediaProducer("Plot", populationsGraph);
@@ -116,7 +115,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 	    
 	    displaySurf.display();
 	    populationsGraph.display();
-	    energyHistogram.display();
+	    //energyHistogram.display();
 	}
 
 	public void buildModel() {
@@ -165,12 +164,12 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		}
 		list.add(new UpdatePopulationsGraph());
 		
-		class UpdateEnergyHistogram extends BasicAction {
+		/*class UpdateEnergyHistogram extends BasicAction {
 			public void execute(){
 				energyHistogram.step();
 			}
 		}
-		list.add(new UpdateEnergyHistogram());
+		list.add(new UpdateEnergyHistogram());*/
 		
 		schedule.scheduleActionBeginning(0, list, BasicAction.class, "execute");
 	}
@@ -215,7 +214,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		
 		populationsGraph.addSequence("Number of Rabbits", new amountOfRabbits());
 		populationsGraph.addSequence("Amount of Grass", new amountOfGrass());
-		energyHistogram.createHistogramItem("Rabbits energy", rabbitList, new rabbitEnergy());
+		//energyHistogram.createHistogramItem("Rabbits energy", rabbitList, new rabbitEnergy());
 	}
 
 	public String[] getInitParam() {
